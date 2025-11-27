@@ -1,0 +1,32 @@
+# General
+.DS_Store
+.env
+.env.*
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+.venv/
+venv/
+
+# Python build artifacts
+build/
+dist/
+*.egg-info/
+
+# FastAPI backend
+/backend/.env
+/backend/.venv/
+/backend/.mypy_cache/
+/backend/.ruff_cache/
+
+# Next.js frontend
+/frontend/node_modules/
+/frontend/.next/
+/frontend/dist/
+/frontend/.env.local
+
+# Logs & misc
+*.log
+logs/
+
