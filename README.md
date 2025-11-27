@@ -1,6 +1,6 @@
-# Mock Prediction Market Platform
+# Capital Gains - Prediction Market Platform
 
-This challenge is now a **full-stack** exercise. Build a minimal prediction market where users can create markets, place YES/NO orders, and resolve outcomes. Focus on core **buy/sell logic**, **no authentication**, and **no tax calculation**. The final submission must include a FastAPI backend, a Next.js frontend styled with shadcn/ui, and a Docker Compose stack running the entire system with PostgreSQL.
+A full-stack prediction market platform where users can create markets, place YES/NO orders, and resolve outcomes. The system implements core **buy/sell logic** with limit-order matching, position tracking, and market resolution. Built with a FastAPI backend, Next.js frontend styled with shadcn/ui, and Docker Compose stack running PostgreSQL.
 
 
 ## 🚀 Quick Start
@@ -51,13 +51,13 @@ The Docker Compose setup automatically:
  └────────┘                        └────────┘
 ```
 
-- **Frontend**: Single-page experience built with Next.js 14+ App Router. Use shadcn/ui components for form inputs, tables, and modals. Fetch data via TanStack Query.
-- **Backend**: FastAPI app exposing JSON endpoints. Persistence handled via SQLAlchemy (prefer async engine) and Alembic migrations.
-- **Database**: PostgreSQL storing markets, orders, and holdings. Use UUID primary keys, timestamp columns, and state enums.
+- **Frontend**: Single-page experience built with Next.js 14+ App Router using shadcn/ui components for form inputs, tables, and modals. Data fetching handled via TanStack Query.
+- **Backend**: FastAPI app exposing JSON endpoints with async SQLAlchemy and Alembic migrations for database management.
+- **Database**: PostgreSQL storing markets, orders, and holdings with UUID primary keys, timestamp columns, and state enums.
 
-## 2. Backend Requirements
+## 2. Backend Implementation
 
-### 2.1 Tech stack
+### 2.1 Tech Stack
 
 - Python 3.11+
 - FastAPI, uvicorn, Pydantic v2
@@ -66,7 +66,7 @@ The Docker Compose setup automatically:
 - pytest for unit tests
 - Limit-order matching: BUY requests cross the resting order book and fill at the nearest complementary price at or above the theoretical complement. SELL requests post liquidity when no counterpart is available. Remaining volume is persisted in `order_book_levels` so subsequent trades honour price/age priority.
 
-### 2.2 Data model (minimum)
+### 2.2 Data Model
 
 | Table         | Key fields                                                                                       |
 | ------------- | ------------------------------------------------------------------------------------------------ |
@@ -75,18 +75,18 @@ The Docker Compose setup automatically:
 | `positions`   | `id`, `market_id`, `side`, `average_price`, `quantity`, timestamps                               |
 | `resolutions` | `id`, `market_id`, `outcome`, `payout_yes`, `payout_no`, timestamps                               |
 
-You may extend the schema with additional helper tables if it simplifies the business logic (e.g., trade ledger, snapshots).
+The schema includes additional helper tables to support the business logic, including order book levels for limit-order matching.
 
-### 2.3 Business rules
+### 2.3 Business Logic
 
 1. **Complementary prices**: YES price + NO price must equal 100. Reject invalid orders.
 2. **Inventory guardrails**: Cannot sell more contracts than currently held for that side. Return a 422 error if violated.
 3. **Weighted average cost**: Buying increases `quantity` and recalculates the average price per side:  
    `new_avg = ((old_qty * old_avg) + (new_qty * new_price)) / (old_qty + new_qty)`
-4. **Selling**: Decrease quantity using the current average cost. Track realized P/L for display, but **do not** compute taxes.
+4. **Selling**: Decrease quantity using the current average cost. Track realized P/L for display.
 5. **Resolution**: When a market resolves to YES or NO, calculate payout for remaining holdings: winning side receives 100 cents per contract; losing side receives 6. Persist final state and prevent further trades.
 
-### 2.4 API surface (suggested)
+### 2.4 API Endpoints
 
 ```
 GET    /markets
@@ -98,19 +98,19 @@ GET    /markets/{id}/positions  -> aggregated holdings & realized P/L
 GET    /healthz
 ```
 
-Feel free to add endpoints (e.g., `/orders`, `/positions`) as long as the core flows above work.
+Additional endpoints are available for extended functionality (e.g., `/orders`, `/positions`).
 
 ### 2.5 Testing
 
-- Provide targeted unit tests in `mock-test/backend/tests/` covering:
-  - Weighted-average calculation.
-  - Preventing oversells.
-  - Proper state changes during resolution.
-  - At least one API test hitting `/markets/{id}/orders`.
+The backend includes comprehensive unit tests in `backend/tests/` covering:
+- Weighted-average calculation
+- Preventing oversells
+- Proper state changes during resolution
+- API integration tests for `/markets/{id}/orders`
 
-## 3. Frontend Requirements
+## 3. Frontend Implementation
 
-### 3.1 Tech stack
+### 3.1 Tech Stack
 
 - Next.js 14+ App Router (TypeScript, strict mode).
 - Tailwind CSS with `postcss.config.js` + `tailwind.config.ts`.
@@ -120,30 +120,28 @@ Feel free to add endpoints (e.g., `/orders`, `/positions`) as long as the core f
 
 ### 3.2 Features
 
-1. **Market list**
-   - Display question, status (badge), and aggregate YES/NO prices.
-   - CTA to create a new market (modal or separate page).
-2. **Market detail**
-   - Show question, description, current holdings for YES/NO, remaining inventory.
-   - Forms for BUY and SELL with validation (side, price, quantity).
-   - Table of recent orders (optional but encouraged).
-   - Button to resolve market (disabled when already resolved) plus outcome selector.
-3. **Holdings summary**
-   - Show aggregated YES/NO positions, average cost, and unrealized P/L.
-4. **UX expectations**
-   - Loading and error states for each mutation.
-   - Optimistic updates or immediate refetch after actions.
-   - Responsive layout (desktop + mobile).
+1. **Market List**
+   - Displays question, status (badge), and aggregate YES/NO prices
+   - Create new market functionality
+2. **Market Detail**
+   - Shows question, description, current holdings for YES/NO, and remaining inventory
+   - Forms for BUY and SELL with validation (side, price, quantity)
+   - Table of recent orders
+   - Button to resolve market (disabled when already resolved) with outcome selector
+3. **Holdings Summary**
+   - Shows aggregated YES/NO positions, average cost, and unrealized P/L
+4. **User Experience**
+   - Loading and error states for each mutation
+   - Optimistic updates with immediate refetch after actions
+   - Responsive layout (desktop + mobile)
 
-### 3.3 shadcn setup
+### 3.3 shadcn/ui Components
 
-- Use the standard `npx shadcn-ui@latest init`.
-- Include at least `button`, `card`, `table`, `form`, `input`, `select`, and `dialog`.
-- Keep styling consistent with Predicta brand (Tailwind + semantic colors).
+The frontend uses shadcn/ui components including `button`, `card`, `table`, `form`, `input`, `select`, and `dialog`. Styling is consistent with Predicta brand using Tailwind CSS with semantic colors.
 
 ## 4. Docker Compose Environment
 
-Create `mock-test/compose.yml` with three services:
+The `compose.yml` file defines three services:
 
 ```yaml
 services:
@@ -187,12 +185,11 @@ volumes:
   db-data:
 ```
 
-Guidelines:
-- Bind-mount backend/frontend source directories to enable live reload.
-- Ensure backend waits for PostgreSQL (use `depends_on` + retry logic or a wait script).
-- Provide `.env.example` files for both backend and frontend describing required variables (DB URL, API URL, etc.).
+Configuration:
+- Backend and frontend source directories are bind-mounted to enable live reload
+- Backend waits for PostgreSQL using health checks and dependency conditions
+- `.env.example` files are provided for both backend and frontend describing required variables (DB URL, API URL, etc.)
 
----
 
 ## 5. Running & Development Workflow
 
@@ -239,24 +236,4 @@ docker compose exec backend alembic upgrade head
 ```bash
 docker compose logs -f [service_name]  # e.g., backend, frontend, db
 ```
-
-### Running Services Individually [Not recommended]
-
-If you prefer to run services outside Docker:
-
-1. **Backend**: Copy `backend/.env.example` to `backend/.env` and run:
-   ```bash
-   cd backend
-   alembic upgrade head
-   uvicorn app.main:app --reload
-   ```
-
-2. **Frontend**: Copy `frontend/.env.example` to `frontend/.env` and run:
-   ```bash
-   cd frontend
-   pnpm install
-   pnpm dev
-   ```
-
-3. **Database**: Use the Docker Compose database or set up PostgreSQL locally.
 
