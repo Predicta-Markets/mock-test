@@ -1,6 +1,4 @@
-# Capital Gains - Prediction Market Platform
-
-A full-stack prediction market platform where users can create markets, place YES/NO orders, and resolve outcomes. The system implements core **buy/sell logic** with limit-order matching, position tracking, and market resolution. Built with a FastAPI backend, Next.js frontend styled with shadcn/ui, and Docker Compose stack running PostgreSQL.
+# Mock Prediction Market Platform
 
 
 ## 🚀 Quick Start
